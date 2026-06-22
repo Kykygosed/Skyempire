@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyEmpire — Airline Simulator MSFS2024</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060d1a;
+  --bg2:#0b1626;
+  --bg3:#101f36;
+  --panel:#0f1c30;
+  --panel2:#152035;
+  --border:#1e3a5f;
+  --amber:#f5a623;
+  --amber2:#ffc145;
+  --blue:#1a7fff;
+  --blue2:#4da3ff;
+  --green:#00e676;
+  --red:#ff4d4d;
+  --text:#d0e4ff;
+  --text2:#8aaccc;
+  --mono:'Share Tech Mono',monospace;
+  --sans:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;overflow-x:hidden}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border)}
+/* TOPBAR */
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--panel);border-bottom:1px solid var(--border);position:fixed;top:0;left:0;right:0;z-index:1000}
+#topbar .logo{font-family:var(--mono);font-size:20px;color:var(--amber);letter-spacing:3px;text-transform:uppercase}
+#topbar .logo span{color:var(--blue2)}
+#userinfo{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--text2)}
+#userinfo strong{color:var(--amber);font-family:var(--mono)}
+#userinfo .wallet{background:var(--bg3);border:1px solid var(--border);padding:4px 12px;border-radius:3px;font-family:var(--mono);color:var(--green)}
+/* SIDENAV */
+#sidenav{position:fixed;top:56px;left:0;bottom:0;width:200px;background:var(--panel);border-right:1px solid var(--border);z-index:900;overflow-y:auto}
+.nav-section{padding:16px 12px 4px;font-size:11px;letter-spacing:2px;color:var(--text2);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text2);transition:all .15s;font-size:14px;font-weight:500;border-left:3px solid transparent}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg3);color:var(--amber);border-left-color:var(--amber)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+/* MAIN */
+#main{margin-left:200px;margin-top:56px;padding:24px;min-height:calc(100vh - 56px)}
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:16px}
+.card-title{font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+/* STAT BOXES */
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px;text-align:center}
+.stat-box .val{font-family:var(--mono);font-size:22px;color:var(--amber2);font-weight:bold}
+.stat-box .lbl{font-size:12px;color:var(--text2);margin-top:4px;letter-spacing:1px}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:3px;border:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:14px;letter-spacing:.5px;transition:all .15s}
+.btn-primary{background:var(--amber);color:#000}
+.btn-primary:hover{background:var(--amber2)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:var(--blue2)}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{opacity:.85}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{opacity:.85}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--amber);color:var(--amber)}
+.btn-sm{padding:5px 12px;font-size:12px}
+/* INPUTS */
+.input-group{margin-bottom:14px}
+.input-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:3px;font-family:var(--sans);font-size:14px;outline:none;transition:border .15s}
+.inp:focus{border-color:var(--blue)}
+select.inp option{background:var(--bg2)}
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--bg3);padding:8px 12px;text-align:left;color:var(--text2);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.tbl tr:hover td{background:var(--bg3)}
+.tbl .mono{font-family:var(--mono)}
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-family:var(--mono);letter-spacing:1px}
+.badge-green{background:#00e67620;color:var(--green);border:1px solid #00e67640}
+.badge-amber{background:#f5a62320;color:var(--amber);border:1px solid #f5a62340}
+.badge-red{background:#ff4d4d20;color:var(--red);border:1px solid #ff4d4d40}
+.badge-blue{background:#1a7fff20;color:var(--blue2);border:1px solid #1a7fff40}
+/* MAP */
+#mapContainer{height:450px;border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000a;z-index:2000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:28px;min-width:460px;max-width:640px;max-height:85vh;overflow-y:auto;position:relative}
+.modal-title{font-family:var(--mono);font-size:16px;color:var(--amber);letter-spacing:2px;margin-bottom:20px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer}
+.modal-close:hover{color:var(--red)}
+/* AUTH SCREEN */
+#authScreen{position:fixed;inset:0;background:var(--bg);z-index:3000;display:flex;align-items:center;justify-content:center}
+.auth-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:40px;width:420px;text-align:center}
+.auth-logo{font-family:var(--mono);font-size:28px;color:var(--amber);letter-spacing:4px;margin-bottom:4px}
+.auth-logo span{color:var(--blue2)}
+.auth-sub{color:var(--text2);font-size:13px;margin-bottom:28px}
+.auth-tabs{display:flex;gap:2px;margin-bottom:24px;background:var(--bg3);border-radius:3px;padding:3px}
+.auth-tab{flex:1;padding:8px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:2px;font-family:var(--sans);font-size:14px;font-weight:600;transition:all .15s}
+.auth-tab.active{background:var(--amber);color:#000}
+/* TICKER */
+#ticker{background:var(--bg2);border-bottom:1px solid var(--border);padding:4px 200px;font-family:var(--mono);font-size:12px;color:var(--text2);overflow:hidden;white-space:nowrap;position:fixed;top:56px;left:200px;right:0;z-index:800}
+#ticker span{color:var(--green)}
+/* TABS */
+.tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.tab{padding:8px 20px;border:none;background:none;color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+/* PROGRESS */
+.progress-bar{background:var(--bg3);border-radius:10px;height:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue2));border-radius:10px;transition:width .3s}
+/* AIRLINE LOGO */
+.airline-logo-big{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;font-family:var(--mono);margin:0 auto 12px}
+/* SECTIONS */
+.section{display:none}
+.section.active{display:block}
+/* FIDS STYLE */
+.fids-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:13px}
+.fids-row:hover{background:var(--bg3)}
+.fids-time{color:var(--amber);width:50px}
+.fids-flight{color:var(--blue2);width:80px}
+.fids-route{flex:1;color:var(--text)}
+.fids-status{width:90px;text-align:right}
+/* HELP */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text2)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+/* TOOLTIP */
+.tooltip{position:relative;display:inline-block}
+.tooltip .tip{visibility:hidden;background:var(--bg2);color:var(--text);border:1px solid var(--border);padding:6px 10px;border-radius:3px;font-size:12px;position:absolute;z-index:100;bottom:125%;left:50%;transform:translateX(-50%);white-space:nowrap}
+.tooltip:hover .tip{visibility:visible}
+/* RANK BADGE */
+.rank{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:10px;font-family:var(--mono)}
+/* ECONOMY PANEL */
+.econ-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.econ-item:last-child{border-bottom:none}
+.econ-label{color:var(--text2);font-size:13px}
+.econ-val{font-family:var(--mono);font-size:14px}
+.econ-val.pos{color:var(--green)}
+.econ-val.neg{color:var(--red)}
+/* NOTIFICATION */
+.notif{position:fixed;bottom:24px;right:24px;z-index:5000;display:flex;flex-direction:column;gap:8px}
+.notif-item{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--amber);padding:12px 16px;border-radius:4px;font-size:13px;min-width:260px;animation:slideIn .3s ease}
+.notif-item.success{border-left-color:var(--green)}
+.notif-item.error{border-left-color:var(--red)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* RESPONSIVE */
+@media(max-width:768px){
+  #sidenav{width:60px}
+  .nav-item span.nav-label{display:none}
+  #main{margin-left:60px}
+  #ticker{left:60px}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .modal{min-width:90vw}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">SKY<span>EMPIRE</span></div>
+    <div class="auth-sub">MSFS2024 Airline Simulator • Multiplayer</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Connexion</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Inscription</button>
+    </div>
+    <div id="loginForm">
+      <div class="input-group"><label>Email</label><input class="inp" id="loginEmail" type="email" placeholder="pilot@airline.com"></div>
+      <div class="input-group"><label>Mot de passe</label><input class="inp" id="loginPass" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">✈ Se connecter</button>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="input-group"><label>Prénom &amp; Nom</label><input class="inp" id="regName" placeholder="Capt. Jean Dupont"></div>
+      <div class="input-group"><label>Email</label><input class="inp" id="regEmail" type="email" placeholder="pilot@airline.com"></div>
+      <div class="input-group"><label>Mot de passe</label><input class="inp" id="regPass" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doRegister()">🛫 Créer mon compte pilote</button>
+    </div>
+    <p id="authError" style="color:var(--red);font-size:12px;margin-top:12px;display:none"></p>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">SKY<span>EMPIRE</span></div>
+  <div id="userinfo">
+    <div id="pilotRank" class="rank" style="background:#f5a62315;border:1px solid #f5a62340;color:var(--amber)">✈ Junior Pilot</div>
+    <span>Pilote: <strong id="topPilotName">—</strong></span>
+    <span>Compagnie: <strong id="topAirlineName">—</strong></span>
+    <div class="wallet" id="topWallet">—</div>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Déconnexion</button>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div id="ticker">⬤ &nbsp;<span id="tickerContent">Chargement des données de vol...</span></div>
+
+<!-- SIDENAV -->
+<div id="sidenav">
+  <div class="nav-section">Navigation</div>
+  <div class="nav-item active" onclick="showSection('dashboard')"><span class="icon">🏢</span><span class="nav-label">Dashboard</span></div>
+  <div class="nav-item" onclick="showSection('airline')"><span class="icon">🏷️</span><span class="nav-label">Ma Compagnie</span></div>
+  <div class="nav-item" onclick="showSection('fleet')"><span class="icon">✈️</span><span class="nav-label">Flotte</span></div>
+  <div class="nav-item" onclick="showSection('routes')"><span class="icon">🗺️</span><span class="nav-label">Routes</span></div>
+  <div class="nav-item" onclick="showSection('schedule')"><span class="icon">🕐</span><span class="nav-label">Planning</span></div>
+  <div class="nav-item" onclick="showSection('pilots')"><span class="icon">👨‍✈️</span><span class="nav-label">Pilotes</span></div>
+  <div class="nav-item" onclick="showSection('market')"><span class="icon">🛒</span><span class="nav-label">Marché</span></div>
+  <div class="nav-item" onclick="showSection('economy')"><span class="icon">💰</span><span class="nav-label">Économie</span></div>
+  <div class="nav-item" onclick="showSection('map')"><span class="icon">🌍</span><span class="nav-label">Carte</span></div>
+  <div class="nav-section">Réseau</div>
+  <div class="nav-item" onclick="showSection('allairlines')"><span class="icon">🌐</span><span class="nav-label">Compagnies</span></div>
+  <div class="nav-item" onclick="showSection('profile')"><span class="icon">👤</span><span class="nav-label">Mon Profil</span></div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+<!-- DASHBOARD -->
+<div id="sec-dashboard" class="section active">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:4px;font-size:18px">OPERATIONS CENTER</h2>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:20px">Bienvenue dans SkyEmpire — Simulateur de compagnie aérienne MSFS2024</p>
+  <div class="grid4" id="dashStats">
+    <div class="stat-box"><div class="val" id="dFleet">0</div><div class="lbl">Avions en flotte</div></div>
+    <div class="stat-box"><div class="val" id="dRoutes">0</div><div class="lbl">Routes actives</div></div>
+    <div class="stat-box"><div class="val" id="dPilots">0</div><div class="lbl">Pilotes recrutés</div></div>
+    <div class="stat-box"><div class="val" id="dRevenue">$0</div><div class="lbl">Revenus mensuels</div></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">✈ Prochains Vols (FIDS)</div>
+      <div id="fidsBoard"><div class="empty-state"><div class="icon">🛫</div><p>Aucun vol planifié</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💹 Situation Financière</div>
+      <div id="financialSummary"><div class="empty-state"><div class="icon">💼</div><p>Rejoignez ou créez une compagnie</p></div></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:0">
+    <div class="card">
+      <div class="card-title">📢 Actualités Compagnie</div>
+      <div id="newsBoard"><div class="empty-state"><div class="icon">📰</div><p>Aucune actualité</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🏆 Classement Global</div>
+      <div id="leaderboard"><div class="empty-state"><div class="icon">🥇</div><p>Classement en cours...</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- AIRLINE SECTION -->
+<div id="sec-airline" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">🏷️ MA COMPAGNIE AÉRIENNE</h2>
+  <div id="noAirlinePanel">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">🆕 Créer une Compagnie</div>
+        <div class="input-group"><label>Nom de la compagnie</label><input class="inp" id="newAirlineName" placeholder="ex: Air Liberté"></div>
+        <div class="input-group"><label>Code IATA (2 lettres)</label><input class="inp" id="newAirlineIATA" placeholder="ex: AF" maxlength="2" style="text-transform:uppercase"></div>
+        <div class="input-group"><label>Pays d'origine</label><input class="inp" id="newAirlineCountry" placeholder="ex: France"></div>
+        <div class="input-group"><label>Hub principal (code ICAO)</label>
+          <select class="inp" id="newAirlineHub">
+            <option value="">— Choisir un aéroport —</option>
+          </select>
+        </div>
+        <div class="input-group"><label>Couleur compagnie</label><input class="inp" id="newAirlineColor" type="color" value="#1a7fff"></div>
+        <div class="input-group"><label>Slogan</label><input class="inp" id="newAirlineSlogan" placeholder="ex: Le ciel est notre terrain"></div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:12px">💰 Capital de départ : <strong style="color:var(--green)">$500 000 000</strong></p>
+        <button class="btn btn-primary" onclick="createAirline()">🚀 Fonder la Compagnie</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🔗 Rejoindre une Compagnie</div>
+        <div id="joinAirlineList"><p style="color:var(--text2)">Chargement...</p></div>
+      </div>
+    </div>
+  </div>
+  <div id="myAirlinePanel" style="display:none">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">
+        <div id="airlineLogoDisplay" class="airline-logo-big" style="width:80px;height:80px;font-size:30px">✈</div>
+        <div>
+          <div style="font-family:var(--mono);font-size:22px;color:var(--amber)" id="airlineDisplayName">—</div>
+          <div style="color:var(--text2);margin-top:4px"><span id="airlineIATADisplay" style="color:var(--blue2);font-family:var(--mono)">—</span> • <span id="airlineCountryDisplay">—</span> • Hub: <span id="airlineHubDisplay" style="color:var(--amber2)">—</span></div>
+          <div style="color:var(--text2);font-size:13px;margin-top:4px;font-style:italic" id="airlineSloganDisplay">—</div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <span class="badge badge-green" id="airlineRoleDisplay">PDG</span>
+            <span class="badge badge-blue" id="airlineFleetCountDisplay">0 avions</span>
+            <span class="badge badge-amber" id="airlineRouteCountDisplay">0 routes</span>
+          </div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-family:var(--mono);font-size:28px;color:var(--green)" id="airlineBalance">$0</div>
+          <div style="color:var(--text2);font-size:12px">Capital disponible</div>
+          <div style="font-family:var(--mono);font-size:14px;color:var(--amber);margin-top:4px" id="airlineProfitDisplay">+$0 / mois</div>
+        </div>
+      </div>
+      <div id="airlineOwnerActions" style="display:none;border-top:1px solid var(--border);padding-top:16px">
+        <div class="grid3">
+          <div>
+            <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">Salaire pilote ($/mois)</label>
+            <input class="inp" id="pilotSalaryInput" type="number" placeholder="ex: 5000">
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="updatePilotSalary()">💾 Mettre à jour</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="airlineStatsCard">
+      <div class="card-title">📊 Statistiques Compagnie</div>
+      <div class="grid4">
+        <div class="stat-box"><div class="val" id="statFleet">0</div><div class="lbl">Avions</div></div>
+        <div class="stat-box"><div class="val" id="statRoutes">0</div><div class="lbl">Routes</div></div>
+        <div class="stat-box"><div class="val" id="statPilots">0</div><div class="lbl">Pilotes</div></div>
+        <div class="stat-box"><div class="val" id="statReputation">⭐ 5.0</div><div class="lbl">Réputation</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FLEET -->
+<div id="sec-fleet" class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <h2 style="font-family:var(--mono);color:var(--amber)">✈️ FLOTTE</h2>
+    <button class="btn btn-primary" onclick="showSection('market')">+ Acheter un avion</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Avions en service</div>
+    <div id="fleetTable"><div class="empty-state"><div class="icon">✈</div><p>Aucun avion dans la flotte. Achetez votre premier appareil sur le Marché.</p></div></div>
+  </div>
+</div>
+
+<!-- ROUTES -->
+<div id="sec-routes" class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <h2 style="font-family:var(--mono);color:var(--amber)">🗺️ ROUTES</h2>
+    <button class="btn btn-primary" onclick="openRouteModal()">+ Acheter une Route</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Routes actives</div>
+    <div id="routesTable"><div class="empty-state"><div class="icon">🗺️</div><p>Aucune route. Achetez votre première liaison pour commencer à opérer.</p></div></div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div id="sec-schedule" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">🕐 PLANNING DE VOL</h2>
+  <div class="card">
+    <div class="card-title">Assignation Pilotes → Routes → Avions</div>
+    <div id="scheduleTable"><div class="empty-state"><div class="icon">📅</div><p>Configurez des routes et une flotte avant de planifier</p></div></div>
+  </div>
+</div>
+
+<!-- PILOTS -->
+<div id="sec-pilots" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">👨‍✈️ PILOTES</h2>
+  <div class="card">
+    <div class="card-title">Équipe de pilotes</div>
+    <div id="pilotsTable"><div class="empty-state"><div class="icon">👨‍✈️</div><p>Aucun pilote encore. Les pilotes rejoignent votre compagnie via le menu d'accueil.</p></div></div>
+  </div>
+</div>
+
+<!-- MARKET -->
+<div id="sec-market" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:4px">🛒 MARCHÉ</h2>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:20px">Achetez des appareils pour votre flotte</p>
+  <div class="tabs">
+    <button class="tab active" onclick="switchMarketTab('aircraft')">Aéronefs</button>
+    <button class="tab" onclick="switchMarketTab('upgrades')">Améliorations</button>
+  </div>
+  <div id="marketAircraft">
+    <div id="aircraftMarketGrid" class="grid3"></div>
+  </div>
+  <div id="marketUpgrades" style="display:none">
+    <div class="grid3" id="upgradesGrid"></div>
+  </div>
+</div>
+
+<!-- ECONOMY -->
+<div id="sec-economy" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">💰 ÉCONOMIE</h2>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Revenus & Dépenses</div>
+      <div id="econBreakdown"><div class="empty-state"><p>Données disponibles après avoir opéré des routes</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Historique Financier</div>
+      <div id="econHistory"><div class="empty-state"><p>Aucun historique disponible</p></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">💳 Mon Portefeuille Pilote</div>
+    <div id="pilotWallet"><div class="empty-state"><p>Chargement...</p></div></div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div id="sec-map" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">🌍 CARTE RÉSEAU</h2>
+  <div class="card">
+    <div class="card-title">Aéroports & Routes de votre réseau</div>
+    <div id="mapContainer"></div>
+  </div>
+</div>
+
+<!-- ALL AIRLINES -->
+<div id="sec-allairlines" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">🌐 TOUTES LES COMPAGNIES</h2>
+  <div class="card">
+    <div id="allAirlinesGrid"></div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="sec-profile" class="section">
+  <h2 style="font-family:var(--mono);color:var(--amber);margin-bottom:20px">👤 MON PROFIL PILOTE</h2>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Informations</div>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:60px;margin-bottom:8px">👨‍✈️</div>
+        <div style="font-family:var(--mono);font-size:20px;color:var(--amber)" id="profileName">—</div>
+        <div id="profileRank" class="rank" style="background:#f5a62315;border:1px solid #f5a62340;color:var(--amber);margin:8px auto;display:inline-flex">✈ Junior Pilot</div>
+        <div style="color:var(--text2);margin-top:4px" id="profileAirline">Indépendant</div>
+        <div style="color:var(--green);font-family:var(--mono);font-size:18px;margin-top:12px" id="profileBalance">$0</div>
+        <div style="color:var(--text2);font-size:12px">Portefeuille personnel</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Statistiques de Vol</div>
+      <div class="econ-item"><span class="econ-label">Heures de vol</span><span class="econ-val" id="statHours">0h</span></div>
+      <div class="econ-item"><span class="econ-label">Vols effectués</span><span class="econ-val" id="statFlights">0</span></div>
+      <div class="econ-item"><span class="econ-label">Routes opérées</span><span class="econ-val" id="statRoutesFlown">0</span></div>
+      <div class="econ-item"><span class="econ-label">Salaire reçu total</span><span class="econ-val pos" id="statSalaryTotal">$0</span></div>
+      <div class="econ-item"><span class="econ-label">Achats personnels</span><span class="econ-val neg" id="statSpent">$0</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🎖️ Dépenses Personnelles</div>
+    <div class="grid3">
+      <div class="card" style="margin-bottom:0;cursor:pointer" onclick="buyPilotItem('lounge','Accès Lounge VIP','2500')">
+        <div style="text-align:center;padding:10px">
+          <div style="font-size:32px">🛋️</div>
+          <div style="color:var(--amber);font-weight:bold;margin-top:8px">Lounge VIP</div>
+          <div style="color:var(--text2);font-size:12px;margin:4px 0">+0.1 réputation/vol</div>
+          <div style="color:var(--green);font-family:var(--mono)">$2 500</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0;cursor:pointer" onclick="buyPilotItem('uniform','Uniforme Premium','5000')">
+        <div style="text-align:center;padding:10px">
+          <div style="font-size:32px">🎖️</div>
+          <div style="color:var(--amber);font-weight:bold;margin-top:8px">Uniforme Premium</div>
+          <div style="color:var(--text2);font-size:12px;margin:4px 0">+$500/mois bonus</div>
+          <div style="color:var(--green);font-family:var(--mono)">$5 000</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0;cursor:pointer" onclick="buyPilotItem('apartment','Appartement Aéroport','15000')">
+        <div style="text-align:center;padding:10px">
+          <div style="font-size:32px">🏠</div>
+          <div style="color:var(--amber);font-weight:bold;margin-top:8px">Appart' Aéroport</div>
+          <div style="color:var(--text2);font-size:12px;margin:4px 0">Confort maximisé</div>
+          <div style="color:var(--green);font-family:var(--mono)">$15 000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- NOTIFICATION CONTAINER -->
+<div class="notif" id="notifContainer"></div>
+
+<!-- MODALS -->
+<!-- Route Modal -->
+<div id="routeModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('routeModal')">✕</button>
+    <div class="modal-title">🗺️ ACHETER UNE ROUTE</div>
+    <div class="input-group">
+      <label>Aéroport de départ</label>
+      <select class="inp" id="routeFrom"><option value="">— Départ —</option></select>
+    </div>
+    <div class="input-group">
+      <label>Aéroport d'arrivée</label>
+      <select class="inp" id="routeTo"><option value="">— Arrivée —</option></select>
+    </div>
+    <div id="routePricePreview" style="background:var(--bg3);border:1px solid var(--border);padding:12px;border-radius:4px;margin-bottom:14px;font-family:var(--mono);display:none">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Distance</span><span id="routeDistPreview" style="color:var(--blue2)">—</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="color:var(--text2)">Coût d'achat</span><span id="routeCostPreview" style="color:var(--red)">—</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="color:var(--text2)">Revenu estimé/vol</span><span id="routeRevenuePreview" style="color:var(--green)">—</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="color:var(--text2)">Route aller-retour</span><span style="color:var(--amber)">✓ Inclus</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="calculateRoute()">📐 Calculer le prix</button>
+    <button class="btn btn-green" id="confirmRouteBtn" style="display:none;margin-left:8px" onclick="purchaseRoute()">💳 Acheter la Route</button>
+  </div>
+</div>
+
+<!-- Schedule Modal -->
+<div id="scheduleModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('scheduleModal')">✕</button>
+    <div class="modal-title">📅 PLANIFIER UN VOL</div>
+    <div class="input-group">
+      <label>Route</label>
+      <select class="inp" id="schedRoute"></select>
+    </div>
+    <div class="input-group">
+      <label>Avion assigné</label>
+      <select class="inp" id="schedAircraft"></select>
+    </div>
+    <div class="input-group">
+      <label>Pilote assigné</label>
+      <select class="inp" id="schedPilot"></select>
+    </div>
+    <div class="grid2">
+      <div class="input-group"><label>Heure de départ</label><input class="inp" id="schedDep" type="time" value="08:00"></div>
+      <div class="input-group"><label>Heure d'arrivée</label><input class="inp" id="schedArr" type="time" value="10:00"></div>
+    </div>
+    <div class="input-group">
+      <label>Jours d'opération</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px" onclick="void(0)"><input type="checkbox" class="day-check" value="Mon"> Lun</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="day-check" value="Tue"> Mar</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="day-check" value="Wed"> Mer</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="day-check" value="Thu"> Jeu</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="day-check" value="Fri"> Ven</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="day-check" value="Sat"> Sam</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="day-check" value="Sun"> Dim</label>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSchedule()">💾 Enregistrer le Vol</button>
+  </div>
+</div>
+
+<!-- Aircraft Detail Modal -->
+<div id="aircraftModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('aircraftModal')">✕</button>
+    <div class="modal-title" id="aircraftModalTitle">✈ DÉTAIL AVION</div>
+    <div id="aircraftModalContent"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, set, get, push, update, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBPq6Wfxzq02MfK69BFxHm9_FUjDGTmAcw",
+  authDomain: "kykychat-24c7f.firebaseapp.com",
+  databaseURL: "https://kykychat-24c7f-default-rtdb.firebaseio.com",
+  projectId: "kykychat-24c7f",
+  storageBucket: "kykychat-24c7f.firebasestorage.app",
+  messagingSenderId: "342562811927",
+  appId: "1:342562811927:web:0fed1e1f511c4fddcfec52"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// ─── AIRPORTS DATABASE ───────────────────────────────────────────────────────
+const AIRPORTS = [
+  {icao:'LFPG',iata:'CDG',name:'Paris Charles de Gaulle',city:'Paris',country:'France',lat:49.0097,lng:2.5478,tier:'mega'},
+  {icao:'EGLL',iata:'LHR',name:'London Heathrow',city:'London',country:'UK',lat:51.4706,lng:-0.4619,tier:'mega'},
+  {icao:'EDDF',iata:'FRA',name:'Frankfurt Airport',city:'Frankfurt',country:'Germany',lat:50.0333,lng:8.5706,tier:'mega'},
+  {icao:'EHAM',iata:'AMS',name:'Amsterdam Schiphol',city:'Amsterdam',country:'Netherlands',lat:52.3086,lng:4.7639,tier:'mega'},
+  {icao:'LEMD',iata:'MAD',name:'Madrid Barajas',city:'Madrid',country:'Spain',lat:40.4936,lng:-3.5668,tier:'major'},
+  {icao:'LIRF',iata:'FCO',name:'Rome Fiumicino',city:'Rome',country:'Italy',lat:41.8003,lng:12.2389,tier:'major'},
+  {icao:'LSZH',iata:'ZRH',name:'Zurich Airport',city:'Zurich',country:'Switzerland',lat:47.4647,lng:8.5492,tier:'major'},
+  {icao:'LOWW',iata:'VIE',name:'Vienna International',city:'Vienna',country:'Austria',lat:48.1103,lng:16.5697,tier:'major'},
+  {icao:'LFBO',iata:'TLS',name:'Toulouse Blagnac',city:'Toulouse',country:'France',lat:43.6293,lng:1.3678,tier:'regional'},
+  {icao:'LFML',iata:'MRS',name:'Marseille Provence',city:'Marseille',country:'France',lat:43.4393,lng:5.2214,tier:'regional'},
+  {icao:'LFMN',iata:'NCE',name:'Nice Côte d\'Azur',city:'Nice',country:'France',lat:43.6584,lng:7.2159,tier:'regional'},
+  {icao:'LFLY',iata:'LYS',name:'Lyon Saint-Exupéry',city:'Lyon',country:'France',lat:45.7256,lng:5.0811,tier:'regional'},
+  {icao:'KJFK',iata:'JFK',name:'New York JFK',city:'New York',country:'USA',lat:40.6413,lng:-73.7781,tier:'mega'},
+  {icao:'KLAX',iata:'LAX',name:'Los Angeles Intl',city:'Los Angeles',country:'USA',lat:33.9425,lng:-118.408,tier:'mega'},
+  {icao:'RJTT',iata:'HND',name:'Tokyo Haneda',city:'Tokyo',country:'Japan',lat:35.5494,lng:139.7798,tier:'mega'},
+  {icao:'ZBAA',iata:'PEK',name:'Beijing Capital',city:'Beijing',country:'China',lat:40.0799,lng:116.6031,tier:'mega'},
+  {icao:'OMDB',iata:'DXB',name:'Dubai International',city:'Dubai',country:'UAE',lat:25.2528,lng:55.3644,tier:'mega'},
+  {icao:'WSSS',iata:'SIN',name:'Singapore Changi',city:'Singapore',country:'Singapore',lat:1.3644,lng:103.9915,tier:'mega'},
+  {icao:'YSSY',iata:'SYD',name:'Sydney Kingsford Smith',city:'Sydney',country:'Australia',lat:-33.9461,lng:151.1772,tier:'major'},
+  {icao:'SBGR',iata:'GRU',name:'São Paulo Guarulhos',city:'São Paulo',country:'Brazil',lat:-23.4356,lng:-46.4731,tier:'major'},
+  {icao:'UUEE',iata:'SVO',name:'Moscow Sheremetyevo',city:'Moscow',country:'Russia',lat:55.9726,lng:37.4146,tier:'major'},
+  {icao:'OTHH',iata:'DOH',name:'Doha Hamad Intl',city:'Doha',country:'Qatar',lat:25.2608,lng:51.6138,tier:'major'},
+  {icao:'FACT',iata:'CPT',name:'Cape Town Intl',city:'Cape Town',country:'South Africa',lat:-33.9649,lng:18.6017,tier:'regional'},
+  {icao:'HECA',iata:'CAI',name:'Cairo International',city:'Cairo',country:'Egypt',lat:30.1219,lng:31.4056,tier:'major'},
+  {icao:'LFPO',iata:'ORY',name:'Paris Orly',city:'Paris',country:'France',lat:48.7233,lng:2.3794,tier:'major'},
+  {icao:'EGKK',iata:'LGW',name:'London Gatwick',city:'London',country:'UK',lat:51.1481,lng:-0.1903,tier:'major'},
+  {icao:'LTBA',iata:'IST',name:'Istanbul Airport',city:'Istanbul',country:'Turkey',lat:41.2608,lng:28.7418,tier:'mega'},
+  {icao:'VIDP',iata:'DEL',name:'New Delhi Indira Gandhi',city:'New Delhi',country:'India',lat:28.5665,lng:77.1031,tier:'mega'},
+  {icao:'VHHH',iata:'HKG',name:'Hong Kong Intl',city:'Hong Kong',country:'China',lat:22.3080,lng:113.9185,tier:'mega'},
+  {icao:'EGBB',iata:'BHX',name:'Birmingham Airport',city:'Birmingham',country:'UK',lat:52.4539,lng:-1.7480,tier:'regional'},
+];
+
+// ─── AIRCRAFT DATABASE ────────────────────────────────────────────────────────
+const AIRCRAFT_CATALOG = [
+  // Airbus Narrow-body
+  {id:'a318',manufacturer:'Airbus',model:'A318',variant:'A318-100',seats:107,range:5750,cruiseSpeed:829,fuelBurn:2200,price:58000000,category:'narrow',emoji:'✈',tier:1,description:'Petit monocouloir idéal pour les courtes distances'},
+  {id:'a319',manufacturer:'Airbus',model:'A319',variant:'A319-100',seats:124,range:6800,cruiseSpeed:830,fuelBurn:2400,price:75000000,category:'narrow',emoji:'✈',tier:1,description:'Monocouloir polyvalent court/moyen courrier'},
+  {id:'a320',manufacturer:'Airbus',model:'A320',variant:'A320-200',seats:150,range:5700,cruiseSpeed:833,fuelBurn:2700,price:101000000,category:'narrow',emoji:'✈',tier:1,description:'Best-seller Airbus, standard mondial'},
+  {id:'a321',manufacturer:'Airbus',model:'A321',variant:'A321-200',seats:185,range:5950,cruiseSpeed:833,fuelBurn:3200,price:130000000,category:'narrow',emoji:'✈',tier:2,description:'Version allongée de l\'A320'},
+  {id:'a321neo',manufacturer:'Airbus',model:'A321neo',variant:'A321neo',seats:194,range:7400,cruiseSpeed:833,fuelBurn:2900,price:149000000,category:'narrow',emoji:'✈',tier:2,description:'Moteurs LEAP, économies de carburant -20%'},
+  // Airbus Wide-body
+  {id:'a330200',manufacturer:'Airbus',model:'A330',variant:'A330-200',seats:247,range:13450,cruiseSpeed:871,fuelBurn:6300,price:225000000,category:'wide',emoji:'🛫',tier:3,description:'Gros porteur bi-moteur long courrier'},
+  {id:'a330300',manufacturer:'Airbus',model:'A330',variant:'A330-300',seats:295,range:11750,cruiseSpeed:871,fuelBurn:6800,price:240000000,category:'wide',emoji:'🛫',tier:3,description:'Version allongée de l\'A330'},
+  {id:'a350900',manufacturer:'Airbus',model:'A350',variant:'A350-900',seats:314,range:15000,cruiseSpeed:903,fuelBurn:5800,price:317000000,category:'wide',emoji:'🛫',tier:4,description:'Ultra-long courrier, composites carbone'},
+  {id:'a3501000',manufacturer:'Airbus',model:'A350',variant:'A350-1000',seats:369,range:16100,cruiseSpeed:910,fuelBurn:6200,price:366000000,category:'wide',emoji:'🛫',tier:4,description:'Flagship Airbus, record d\'autonomie'},
+  {id:'a380',manufacturer:'Airbus',model:'A380',variant:'A380-800',seats:555,range:15200,cruiseSpeed:903,fuelBurn:12400,price:445000000,category:'vheavy',emoji:'🛬',tier:5,description:'Double pont, plus grand avion commercial du monde'},
+  // Boeing Narrow-body
+  {id:'b737700',manufacturer:'Boeing',model:'737',variant:'737-700',seats:128,range:6370,cruiseSpeed:839,fuelBurn:2500,price:80000000,category:'narrow',emoji:'✈',tier:1,description:'Monocouloir court courrier'},
+  {id:'b737800',manufacturer:'Boeing',model:'737',variant:'737-800',seats:162,range:5765,cruiseSpeed:842,fuelBurn:2800,price:105000000,category:'narrow',emoji:'✈',tier:1,description:'Monocouloir best-seller Boeing'},
+  {id:'b737900',manufacturer:'Boeing',model:'737',variant:'737-900',seats:180,range:5925,cruiseSpeed:842,fuelBurn:3100,price:121000000,category:'narrow',emoji:'✈',tier:2,description:'Version longue du 737'},
+  {id:'b737max8',manufacturer:'Boeing',model:'737 MAX',variant:'737 MAX 8',seats:178,range:6570,cruiseSpeed:839,fuelBurn:2650,price:122000000,category:'narrow',emoji:'✈',tier:2,description:'737 nouvelle génération LEAP'},
+  // Boeing Wide-body
+  {id:'b767300',manufacturer:'Boeing',model:'767',variant:'767-300ER',seats:218,range:11070,cruiseSpeed:851,fuelBurn:5800,price:195000000,category:'wide',emoji:'🛫',tier:3,description:'Bimoteur long courrier classique'},
+  {id:'b777200',manufacturer:'Boeing',model:'777',variant:'777-200ER',seats:305,range:13080,cruiseSpeed:905,fuelBurn:8000,price:320000000,category:'wide',emoji:'🛫',tier:4,description:'Triple Sept, gros porteur longue distance'},
+  {id:'b777300',manufacturer:'Boeing',model:'777',variant:'777-300ER',seats:396,range:13650,cruiseSpeed:905,fuelBurn:8800,price:375000000,category:'wide',emoji:'🛫',tier:4,description:'Version allongée, max capacité'},
+  {id:'b777x',manufacturer:'Boeing',model:'777X',variant:'777X-9',seats:426,range:13500,cruiseSpeed:905,fuelBurn:8500,price:442000000,category:'vheavy',emoji:'🛬',tier:5,description:'Ailes pliables, GE9X motors'},
+  {id:'b787800',manufacturer:'Boeing',model:'787',variant:'787-8 Dreamliner',seats:242,range:13530,cruiseSpeed:903,fuelBurn:5400,price:248000000,category:'wide',emoji:'🛫',tier:3,description:'Dreamliner carbone, 787 original'},
+  {id:'b787900',manufacturer:'Boeing',model:'787',variant:'787-9 Dreamliner',seats:296,range:14140,cruiseSpeed:903,fuelBurn:5900,price:292000000,category:'wide',emoji:'🛫',tier:4,description:'Version allongée du Dreamliner'},
+  // Embraer
+  {id:'e170',manufacturer:'Embraer',model:'E170',variant:'E170',seats:70,range:3735,cruiseSpeed:870,fuelBurn:1600,price:37000000,category:'regional',emoji:'✈',tier:1,description:'Regional jet pour petites routes'},
+  {id:'e175',manufacturer:'Embraer',model:'E175',variant:'E175',seats:80,range:3735,cruiseSpeed:870,fuelBurn:1800,price:43000000,category:'regional',emoji:'✈',tier:1,description:'Jet régional populaire'},
+  {id:'e190',manufacturer:'Embraer',model:'E190',variant:'E190',seats:100,range:4537,cruiseSpeed:870,fuelBurn:2000,price:52000000,category:'regional',emoji:'✈',tier:1,description:'E190 polyvalent'},
+  {id:'e195e2',manufacturer:'Embraer',model:'E195-E2',variant:'E195-E2',seats:132,range:4800,cruiseSpeed:870,fuelBurn:2100,price:61000000,category:'regional',emoji:'✈',tier:2,description:'Dernière génération E2, -25% carburant'},
+  // McDonnell Douglas
+  {id:'md80',manufacturer:'McDonnell Douglas',model:'MD-80',variant:'MD-82',seats:155,range:4635,cruiseSpeed:811,fuelBurn:3800,price:25000000,category:'narrow',emoji:'✈',tier:1,description:'Classique monocouloir années 80, d\'occasion'},
+  {id:'md11',manufacturer:'McDonnell Douglas',model:'MD-11',variant:'MD-11',seats:293,range:12455,cruiseSpeed:876,fuelBurn:8200,price:85000000,category:'wide',emoji:'🛫',tier:3,description:'Trimoteur vintage longue distance'},
+];
+
+// ─── GLOBAL STATE ─────────────────────────────────────────────────────────────
+let currentUser = null;
+let currentUserData = null;
+let currentAirline = null;
+let currentAirlineData = null;
+let mapInstance = null;
+let mapLayers = [];
+let pendingRoute = null;
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+window.formatMoney = (n) => {
+  if(!n) return '$0';
+  if(Math.abs(n)>=1e9) return '$'+(n/1e9).toFixed(2)+'B';
+  if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(Math.abs(n)>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+Math.round(n).toLocaleString();
+};
+
+window.haversine = (lat1,lng1,lat2,lng2) => {
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+};
+
+window.notify = (msg,type='info')=>{
+  const c=document.getElementById('notifContainer');
+  const d=document.createElement('div');
+  d.className=`notif-item ${type}`;
+  d.textContent=msg;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),4000);
+};
+
+window.getRank = (hours)=>{
+  if(hours<50) return {name:'Junior Pilot',icon:'🛫',color:'#8aaccc'};
+  if(hours<200) return {name:'Co-Pilote',icon:'✈',color:'#4da3ff'};
+  if(hours<500) return {name:'Pilote de Ligne',icon:'✈',color:'#f5a623'};
+  if(hours<1000) return {name:'Commandant de Bord',icon:'👨‍✈️',color:'#ffc145'};
+  if(hours<2500) return {name:'Capitaine Senior',icon:'⭐',color:'#00e676'};
+  return {name:'Légendaire',icon:'🏆',color:'#ff4d4d'};
+};
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+window.switchAuthTab = (tab)=>{
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='login'?0:1)));
+  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
+};
+
+window.doLogin = async()=>{
+  const e=document.getElementById('loginEmail').value;
+  const p=document.getElementById('loginPass').value;
+  try{ await signInWithEmailAndPassword(auth,e,p); }
+  catch(err){ showAuthError(err.message); }
+};
+
+window.doRegister = async()=>{
+  const name=document.getElementById('regName').value;
+  const email=document.getElementById('regEmail').value;
+  const pass=document.getElementById('regPass').value;
+  if(!name||!email||!pass){showAuthError('Remplissez tous les champs');return;}
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await set(ref(db,`pilots/${cred.user.uid}`),{
+      name,email,
+      balance:50000,
+      airlineId:null,
+      flightHours:0,
+      flightsCount:0,
+      salaryTotal:0,
+      spentTotal:0,
+      purchases:[],
+      joinedAt:Date.now()
+    });
+    notify('Compte créé avec succès ! Bienvenue à bord.','success');
+  }catch(err){showAuthError(err.message);}
+};
+
+window.doLogout=async()=>{
+  await signOut(auth);
+  location.reload();
+};
+
+window.showAuthError=(msg)=>{
+  const el=document.getElementById('authError');
+  el.textContent=msg;
+  el.style.display='block';
+};
+
+// ─── AUTH STATE ───────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async(user)=>{
+  if(user){
+    currentUser=user;
+    document.getElementById('authScreen').style.display='none';
+    await loadUserData();
+    startApp();
+  } else {
+    document.getElementById('authScreen').style.display='flex';
+  }
+});
+
+async function loadUserData(){
+  const snap=await get(ref(db,`pilots/${currentUser.uid}`));
+  currentUserData=snap.val()||{name:'Pilote',balance:50000,flightHours:0};
+  updateTopBar();
+  if(currentUserData.airlineId){
+    await loadAirline(currentUserData.airlineId);
+  }
+}
+
+function updateTopBar(){
+  document.getElementById('topPilotName').textContent=currentUserData.name||'—';
+  document.getElementById('topWallet').textContent=formatMoney(currentUserData.balance||0);
+  const rank=getRank(currentUserData.flightHours||0);
+  document.getElementById('pilotRank').innerHTML=`${rank.icon} ${rank.name}`;
+  document.getElementById('pilotRank').style.color=rank.color;
+}
+
+async function loadAirline(id){
+  const snap=await get(ref(db,`airlines/${id}`));
+  if(snap.exists()){
+    currentAirlineData=snap.val();
+    currentAirlineData.id=id;
+    currentAirline=id;
+    document.getElementById('topAirlineName').textContent=currentAirlineData.name||'—';
+  }
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+window.showSection=(sec)=>{
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`sec-${sec}`).classList.add('active');
+  document.querySelector(`.nav-item[onclick*="${sec}"]`)?.classList.add('active');
+
+  const loaders={
+    dashboard:loadDashboard,
+    airline:loadAirlineSection,
+    fleet:loadFleet,
+    routes:loadRoutes,
+    schedule:loadSchedule,
+    pilots:loadPilots,
+    market:loadMarket,
+    economy:loadEconomy,
+    map:loadMap,
+    allairlines:loadAllAirlines,
+    profile:loadProfile,
+  };
+  if(loaders[sec]) loaders[sec]();
+};
+
+// ─── APP START ────────────────────────────────────────────────────────────────
+function startApp(){
+  populateAirportSelects();
+  loadDashboard();
+  loadMarket();
+  startTicker();
+  setInterval(()=>doEconomyTick(),60000);// Economy tick every minute (= 1 day in game)
+}
+
+// ─── AIRPORT SELECTS ──────────────────────────────────────────────────────────
+function populateAirportSelects(){
+  const selects=['newAirlineHub','routeFrom','routeTo'];
+  selects.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    AIRPORTS.forEach(ap=>{
+      const opt=document.createElement('option');
+      opt.value=ap.icao;
+      opt.textContent=`${ap.iata} — ${ap.name} (${ap.country})`;
+      el.appendChild(opt);
+    });
+  });
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+async function loadDashboard(){
+  if(!currentAirline){
+    document.getElementById('dFleet').textContent='—';
+    document.getElementById('dRoutes').textContent='—';
+    document.getElementById('dPilots').textContent='—';
+    document.getElementById('dRevenue').textContent='—';
+    loadLeaderboard();
+    return;
+  }
+  const [fleet,routes,pilots]=await Promise.all([
+    get(ref(db,`airlines/${currentAirline}/fleet`)),
+    get(ref(db,`airlines/${currentAirline}/routes`)),
+    get(ref(db,`airlines/${currentAirline}/pilots`)),
+  ]);
+  const fleetCount=fleet.exists()?Object.keys(fleet.val()).length:0;
+  const routesCount=routes.exists()?Object.keys(routes.val()).length:0;
+  const pilotsCount=pilots.exists()?Object.keys(pilots.val()).length:0;
+  document.getElementById('dFleet').textContent=fleetCount;
+  document.getElementById('dRoutes').textContent=routesCount;
+  document.getElementById('dPilots').textContent=pilotsCount;
+  const monthly=await computeMonthlyRevenue();
+  document.getElementById('dRevenue').textContent=formatMoney(monthly);
+  loadFIDS();
+  loadFinancialSummary();
+  loadLeaderboard();
+}
+
+async function loadFIDS(){
+  const schedSnap=await get(ref(db,`airlines/${currentAirline}/schedules`));
+  const el=document.getElementById('fidsBoard');
+  if(!schedSnap.exists()){el.innerHTML='<div class="empty-state"><div class="icon">🛫</div><p>Aucun vol planifié</p></div>';return;}
+  const scheds=Object.values(schedSnap.val());
+  const now=new Date();
+  const timeStr=t=>{const[h,m]=t.split(':');return`${h}:${m}`;};
+  el.innerHTML=scheds.slice(0,8).map(s=>`
+    <div class="fids-row">
+      <span class="fids-time">${timeStr(s.depTime)}</span>
+      <span class="fids-flight">${(currentAirlineData?.iata||'XX')}${Math.floor(Math.random()*9000+1000)}</span>
+      <span class="fids-route">${s.fromIcao||'?'} → ${s.toIcao||'?'}</span>
+      <span class="fids-status"><span class="badge badge-green">ON TIME</span></span>
+    </div>`).join('');
+}
+
+async function loadFinancialSummary(){
+  const balance=currentAirlineData?.balance||0;
+  const monthly=await computeMonthlyRevenue();
+  const costs=await computeMonthlyCosts();
+  const profit=monthly-costs;
+  document.getElementById('financialSummary').innerHTML=`
+    <div class="econ-item"><span class="econ-label">Capital</span><span class="econ-val pos">${formatMoney(balance)}</span></div>
+    <div class="econ-item"><span class="econ-label">Revenus /mois</span><span class="econ-val pos">+${formatMoney(monthly)}</span></div>
+    <div class="econ-item"><span class="econ-label">Coûts /mois</span><span class="econ-val neg">-${formatMoney(costs)}</span></div>
+    <div class="econ-item"><span class="econ-label">Profit /mois</span><span class="econ-val ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${formatMoney(profit)}</span></div>
+    <div class="econ-item"><span class="econ-label">Réputation</span><span class="econ-val">⭐ ${currentAirlineData?.reputation||'5.0'}</span></div>
+  `;
+}
+
+async function computeMonthlyRevenue(){
+  if(!currentAirline) return 0;
+  const routesSnap=await get(ref(db,`airlines/${currentAirline}/routes`));
+  if(!routesSnap.exists()) return 0;
+  let total=0;
+  Object.values(routesSnap.val()).forEach(r=>{
+    total+=(r.revenuePerFlight||0)*(r.flightsPerMonth||10);
+  });
+  return total;
+}
+
+async function computeMonthlyCosts(){
+  if(!currentAirline) return 0;
+  const [fleetSnap,pilotsSnap]=await Promise.all([
+    get(ref(db,`airlines/${currentAirline}/fleet`)),
+    get(ref(db,`airlines/${currentAirline}/pilots`)),
+  ]);
+  let costs=0;
+  if(fleetSnap.exists()) Object.values(fleetSnap.val()).forEach(a=>costs+=(a.maintenanceCost||0));
+  const salary=currentAirlineData?.pilotSalary||5000;
+  const pilotCount=pilotsSnap.exists()?Object.keys(pilotsSnap.val()).length:0;
+  costs+=salary*pilotCount;
+  return costs;
+}
+
+async function loadLeaderboard(){
+  const snap=await get(ref(db,'airlines'));
+  const el=document.getElementById('leaderboard');
+  if(!snap.exists()){el.innerHTML='<div class="empty-state"><p>Aucune compagnie encore</p></div>';return;}
+  const airlines=Object.entries(snap.val()).map(([id,a])=>({id,...a}));
+  airlines.sort((a,b)=>(b.balance||0)-(a.balance||0));
+  el.innerHTML=`<table class="tbl"><thead><tr><th>#</th><th>Compagnie</th><th>Capital</th><th>Flotte</th></tr></thead><tbody>
+    ${airlines.slice(0,10).map((a,i)=>`
+      <tr>
+        <td style="color:var(--amber);font-family:var(--mono)">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+        <td><span style="color:${a.color||'var(--blue2)'}">${a.iata||'—'}</span> ${a.name||'—'}</td>
+        <td class="mono pos">${formatMoney(a.balance||0)}</td>
+        <td>${Object.keys(a.fleet||{}).length}</td>
+      </tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ─── TICKER ───────────────────────────────────────────────────────────────────
+async function startTicker(){
+  const updates=[
+    '✈ Marché: A320neo à $149M',
+    '📊 Trafic aérien mondial en hausse de 4.2%',
+    '⛽ Prix carburant: $0.85/litre',
+    '🌡️ Météo LFPG: CAVOK, vent 270°/12kt',
+    '🎖️ Nouveau: Route LFPG→KJFK disponible',
+  ];
+  let i=0;
+  const tick=document.getElementById('tickerContent');
+  setInterval(()=>{
+    tick.textContent=updates[i%updates.length];
+    i++;
+  },4000);
+}
+
+// ─── AIRLINE SECTION ──────────────────────────────────────────────────────────
+async function loadAirlineSection(){
+  if(currentAirline){
+    document.getElementById('noAirlinePanel').style.display='none';
+    document.getElementById('myAirlinePanel').style.display='block';
+    renderAirlinePanel();
+  } else {
+    document.getElementById('noAirlinePanel').style.display='block';
+    document.getElementById('myAirlinePanel').style.display='none';
+    loadJoinList();
+  }
+}
+
+async function renderAirlinePanel(){
+  const a=currentAirlineData;
+  if(!a) return;
+  const logoEl=document.getElementById('airlineLogoDisplay');
+  logoEl.textContent=a.iata?.charAt(0)||'✈';
+  logoEl.style.background=(a.color||'#1a7fff')+'30';
+  logoEl.style.border=`2px solid ${a.color||'#1a7fff'}`;
+  logoEl.style.color=a.color||'#1a7fff';
+  document.getElementById('airlineDisplayName').textContent=a.name||'—';
+  document.getElementById('airlineIATADisplay').textContent=a.iata||'—';
+  document.getElementById('airlineCountryDisplay').textContent=a.country||'—';
+  const hub=AIRPORTS.find(ap=>ap.icao===a.hubIcao);
+  document.getElementById('airlineHubDisplay').textContent=hub?`${hub.iata} ${hub.name}`:a.hubIcao||'—';
+  document.getElementById('airlineSloganDisplay').textContent=a.slogan||'';
+  document.getElementById('airlineBalance').textContent=formatMoney(a.balance||0);
+  const isOwner=(a.ownerId===currentUser?.uid);
+  document.getElementById('airlineOwnerActions').style.display=isOwner?'block':'none';
+  document.getElementById('airlineRoleDisplay').textContent=isOwner?'PDG':'Pilote';
+  document.getElementById('pilotSalaryInput').value=a.pilotSalary||5000;
+  const [fleet,routes,pilots]=await Promise.all([
+    get(ref(db,`airlines/${currentAirline}/fleet`)),
+    get(ref(db,`airlines/${currentAirline}/routes`)),
+    get(ref(db,`airlines/${currentAirline}/pilots`)),
+  ]);
+  const fc=fleet.exists()?Object.keys(fleet.val()).length:0;
+  const rc=routes.exists()?Object.keys(routes.val()).length:0;
+  const pc=pilots.exists()?Object.keys(pilots.val()).length:0;
+  document.getElementById('airlineFleetCountDisplay').textContent=`${fc} avions`;
+  document.getElementById('airlineRouteCountDisplay').textContent=`${rc} routes`;
+  document.getElementById('statFleet').textContent=fc;
+  document.getElementById('statRoutes').textContent=rc;
+  document.getElementById('statPilots').textContent=pc;
+  document.getElementById('statReputation').textContent=`⭐ ${a.reputation||'5.0'}`;
+  const monthly=await computeMonthlyRevenue();
+  const costs=await computeMonthlyCosts();
+  document.getElementById('airlineProfitDisplay').textContent=`${monthly-costs>=0?'+':''}${formatMoney(monthly-costs)} / mois`;
+}
+
+async function loadJoinList(){
+  const el=document.getElementById('joinAirlineList');
+  const snap=await get(ref(db,'airlines'));
+  if(!snap.exists()){el.innerHTML='<p style="color:var(--text2)">Aucune compagnie disponible.</p>';return;}
+  const list=Object.entries(snap.val()).map(([id,a])=>({id,...a}));
+  el.innerHTML=list.map(a=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="width:40px;height:40px;border-radius:50%;background:${(a.color||'#1a7fff')}30;border:1px solid ${a.color||'#1a7fff'};display:flex;align-items:center;justify-content:center;font-weight:bold;color:${a.color||'#1a7fff'};font-family:var(--mono)">${a.iata?.charAt(0)||'?'}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;color:var(--text)">${a.name} <span style="color:var(--blue2);font-size:12px;font-family:var(--mono)">${a.iata}</span></div>
+        <div style="font-size:12px;color:var(--text2)">${a.country} • Capital: ${formatMoney(a.balance)}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="joinAirline('${a.id}')">Rejoindre</button>
+    </div>`).join('');
+}
+
+window.createAirline=async()=>{
+  if(currentAirline){notify('Vous faites déjà partie d\'une compagnie','error');return;}
+  const name=document.getElementById('newAirlineName').value.trim();
+  const iata=document.getElementById('newAirlineIATA').value.trim().toUpperCase();
+  const country=document.getElementById('newAirlineCountry').value.trim();
+  const hubIcao=document.getElementById('newAirlineHub').value;
+  const color=document.getElementById('newAirlineColor').value;
+  const slogan=document.getElementById('newAirlineSlogan').value.trim();
+  if(!name||!iata||!country||!hubIcao){notify('Remplissez tous les champs obligatoires','error');return;}
+  const airlineRef=push(ref(db,'airlines'));
+  const airlineId=airlineRef.key;
+  await set(airlineRef,{
+    name,iata,country,hubIcao,color,slogan,
+    balance:500000000,
+    ownerId:currentUser.uid,
+    pilotSalary:5000,
+    reputation:5.0,
+    createdAt:Date.now(),
+    pilots:{[currentUser.uid]:true},
+    fleet:{},
+    routes:{},
+    news:[{msg:`${name} (${iata}) est fondée ! Bienvenue dans le monde de l'aviation commerciale.`,ts:Date.now()}]
+  });
+  await update(ref(db,`pilots/${currentUser.uid}`),{airlineId});
+  currentAirline=airlineId;
+  await loadAirline(airlineId);
+  document.getElementById('topAirlineName').textContent=name;
+  notify(`✈ ${name} fondée avec succès !`,'success');
+  showSection('airline');
+};
+
+window.joinAirline=async(id)=>{
+  if(currentAirline){notify('Vous faites déjà partie d\'une compagnie','error');return;}
+  await update(ref(db,`pilots/${currentUser.uid}`),{airlineId:id});
+  await update(ref(db,`airlines/${id}/pilots`),{[currentUser.uid]:true});
+  currentAirline=id;
+  await loadAirline(id);
+  notify('✈ Vous avez rejoint la compagnie !','success');
+  showSection('airline');
+};
+
+window.updatePilotSalary=async()=>{
+  const salary=parseInt(document.getElementById('pilotSalaryInput').value);
+  if(!salary||salary<0){notify('Salaire invalide','error');return;}
+  await update(ref(db,`airlines/${currentAirline}`),{pilotSalary:salary});
+  currentAirlineData.pilotSalary=salary;
+  notify(`💰 Salaire pilote mis à jour : ${formatMoney(salary)}/mois`,'success');
+};
+
+// ─── FLEET ────────────────────────────────────────────────────────────────────
+async function loadFleet(){
+  if(!currentAirline){document.getElementById('fleetTable').innerHTML='<div class="empty-state"><p>Rejoignez une compagnie d\'abord</p></div>';return;}
+  const snap=await get(ref(db,`airlines/${currentAirline}/fleet`));
+  const el=document.getElementById('fleetTable');
+  if(!snap.exists()){el.innerHTML='<div class="empty-state"><div class="icon">✈</div><p>Aucun avion. Achetez votre premier appareil sur le Marché.</p></div>';return;}
+  const fleet=Object.entries(snap.val()).map(([id,a])=>({id,...a}));
+  el.innerHTML=`<table class="tbl"><thead><tr><th>Immat.</th><th>Type</th><th>Sièges</th><th>Portée</th><th>Statut</th><th>Maintenance</th><th>Âge</th></tr></thead><tbody>
+    ${fleet.map(a=>{
+      const cat=AIRCRAFT_CATALOG.find(c=>c.id===a.catalogId)||{};
+      const age=Math.floor((Date.now()-a.purchasedAt)/(1000*60*60*24));
+      const status=a.assignedRoute?'En service':'Disponible';
+      return `<tr>
+        <td class="mono" style="color:var(--amber2)">${a.reg||'N/A'}</td>
+        <td>${cat.emoji||'✈'} ${cat.variant||a.model||'—'}</td>
+        <td class="mono">${cat.seats||'—'}</td>
+        <td class="mono">${cat.range?cat.range.toLocaleString()+' km':'—'}</td>
+        <td><span class="badge ${a.assignedRoute?'badge-blue':'badge-green'}">${status}</span></td>
+        <td class="mono neg">${formatMoney(a.maintenanceCost||0)}/mo</td>
+        <td class="mono">${age}j</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+// ─── ROUTES ───────────────────────────────────────────────────────────────────
+async function loadRoutes(){
+  if(!currentAirline){document.getElementById('routesTable').innerHTML='<div class="empty-state"><p>Rejoignez une compagnie d\'abord</p></div>';return;}
+  const snap=await get(ref(db,`airlines/${currentAirline}/routes`));
+  const el=document.getElementById('routesTable');
+  if(!snap.exists()){el.innerHTML='<div class="empty-state"><div class="icon">🗺️</div><p>Aucune route. Achetez votre première liaison.</p></div>';return;}
+  const routes=Object.entries(snap.val()).map(([id,r])=>({id,...r}));
+  el.innerHTML=`<table class="tbl"><thead><tr><th>Route</th><th>Distance</th><th>Avion</th><th>Pilote</th><th>Rev/vol</th><th>Vols/mois</th><th>Profit</th><th>Action</th></tr></thead><tbody>
+    ${routes.map(r=>{
+      const from=AIRPORTS.find(a=>a.icao===r.fromIcao);
+      const to=AIRPORTS.find(a=>a.icao===r.toIcao);
+      const profit=(r.revenuePerFlight||0)*(r.flightsPerMonth||10)-(r.costPerFlight||0)*(r.flightsPerMonth||10);
+      return `<tr>
+        <td><strong style="color:var(--amber)">${r.fromIata||'?'} ↔ ${r.toIata||'?'}</strong><br><span style="color:var(--text2);font-size:11px">${from?.name||'?'} — ${to?.name||'?'}</span></td>
+        <td class="mono">${(r.distance||0).toLocaleString()} km</td>
+        <td>${r.assignedAircraftReg||<span style="color:var(--text2)">Non assigné</span>}</td>
+        <td>${r.assignedPilotName||'<span style="color:var(--text2)">Non assigné</span>'}</td>
+        <td class="mono pos">+${formatMoney(r.revenuePerFlight||0)}</td>
+        <td class="mono">${r.flightsPerMonth||10}</td>
+        <td class="mono ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${formatMoney(profit)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openAssignModal('${r.id}')">📋 Assigner</button></td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+window.openRouteModal=()=>{
+  if(!currentAirline){notify('Rejoignez une compagnie d\'abord','error');return;}
+  if(currentAirlineData?.ownerId!==currentUser?.uid){notify('Seul le PDG peut acheter des routes','error');return;}
+  document.getElementById('routePricePreview').style.display='none';
+  document.getElementById('confirmRouteBtn').style.display='none';
+  pendingRoute=null;
+  document.getElementById('routeModal').style.display='flex';
+};
+
+window.calculateRoute=()=>{
+  const fromIcao=document.getElementById('routeFrom').value;
+  const toIcao=document.getElementById('routeTo').value;
+  if(!fromIcao||!toIcao||fromIcao===toIcao){notify('Sélectionnez deux aéroports différents','error');return;}
+  const from=AIRPORTS.find(a=>a.icao===fromIcao);
+  const to=AIRPORTS.find(a=>a.icao===toIcao);
+  const dist=haversine(from.lat,from.lng,to.lat,to.lng);
+  // Price: base $500K + $100 per km, min $200K
+  const cost=Math.max(200000,500000+dist*100);
+  // Revenue per flight: $50 per seat per 1000km equivalent
+  const revenue=Math.round(dist*120+50000);
+  const costPerFlight=Math.round(dist*40+10000);
+  document.getElementById('routeDistPreview').textContent=dist.toLocaleString()+' km';
+  document.getElementById('routeCostPreview').textContent=formatMoney(cost);
+  document.getElementById('routeRevenuePreview').textContent=formatMoney(revenue)+'/vol';
+  document.getElementById('routePricePreview').style.display='block';
+  document.getElementById('confirmRouteBtn').style.display='inline-flex';
+  pendingRoute={fromIcao,toIcao,fromIata:from.iata,toIata:to.iata,
+    fromName:from.name,toName:to.name,distance:dist,
+    purchaseCost:cost,revenuePerFlight:revenue,costPerFlight,
+    flightsPerMonth:10};
+};
+
+window.purchaseRoute=async()=>{
+  if(!pendingRoute){return;}
+  const balance=currentAirlineData?.balance||0;
+  if(balance<pendingRoute.purchaseCost){notify('Capital insuffisant','error');return;}
+  const routeRef=push(ref(db,`airlines/${currentAirline}/routes`));
+  await set(routeRef,{...pendingRoute,purchasedAt:Date.now(),assignedAircraftId:null,assignedPilotId:null});
+  await update(ref(db,`airlines/${currentAirline}`),{balance:balance-pendingRoute.purchaseCost});
+  currentAirlineData.balance=balance-pendingRoute.purchaseCost;
+  notify(`✅ Route ${pendingRoute.fromIata}↔${pendingRoute.toIata} achetée !`,'success');
+  closeModal('routeModal');
+  loadRoutes();
+};
+
+window.openAssignModal=async(routeId)=>{
+  const [fleetSnap,pilotsSnap]=await Promise.all([
+    get(ref(db,`airlines/${currentAirline}/fleet`)),
+    get(ref(db,`airlines/${currentAirline}/pilots`)),
+  ]);
+  const schedRouteEl=document.getElementById('schedRoute');
+  schedRouteEl.innerHTML='';
+  const routeSnap=await get(ref(db,`airlines/${currentAirline}/routes/${routeId}`));
+  const r=routeSnap.val();
+  const opt=document.createElement('option');
+  opt.value=routeId;
+  opt.textContent=`${r.fromIata}↔${r.toIata} (${r.distance}km)`;
+  schedRouteEl.appendChild(opt);
+  const acEl=document.getElementById('schedAircraft');
+  acEl.innerHTML='<option value="">— Aucun avion —</option>';
+  if(fleetSnap.exists()){
+    Object.entries(fleetSnap.val()).forEach(([id,a])=>{
+      const op=document.createElement('option');
+      op.value=id;
+      op.textContent=`${a.reg} — ${a.model}`;
+      acEl.appendChild(op);
+    });
+  }
+  const pilEl=document.getElementById('schedPilot');
+  pilEl.innerHTML='<option value="">— Aucun pilote —</option>';
+  if(pilotsSnap.exists()){
+    for(const uid of Object.keys(pilotsSnap.val())){
+      const ps=await get(ref(db,`pilots/${uid}`));
+      const p=ps.val();
+      const op=document.createElement('option');
+      op.value=uid;
+      op.textContent=p?.name||uid;
+      pilEl.appendChild(op);
+    }
+  }
+  document.getElementById('scheduleModal').style.display='flex';
+};
+
+window.saveSchedule=async()=>{
+  const routeId=document.getElementById('schedRoute').value;
+  const aircraftId=document.getElementById('schedAircraft').value;
+  const pilotId=document.getElementById('schedPilot').value;
+  const depTime=document.getElementById('schedDep').value;
+  const arrTime=document.getElementById('schedArr').value;
+  const days=[...document.querySelectorAll('.day-check:checked')].map(c=>c.value);
+  if(!routeId||!depTime||!arrTime){notify('Remplissez les champs obligatoires','error');return;}
+  const routeSnap=await get(ref(db,`airlines/${currentAirline}/routes/${routeId}`));
+  const r=routeSnap.val();
+  let pilotName='';
+  if(pilotId){
+    const ps=await get(ref(db,`pilots/${pilotId}`));
+    pilotName=ps.val()?.name||'';
+  }
+  let aircraftReg='';
+  if(aircraftId){
+    const as=await get(ref(db,`airlines/${currentAirline}/fleet/${aircraftId}`));
+    aircraftReg=as.val()?.reg||'';
+  }
+  await update(ref(db,`airlines/${currentAirline}/routes/${routeId}`),{
+    assignedAircraftId:aircraftId,assignedAircraftReg:aircraftReg,
+    assignedPilotId:pilotId,assignedPilotName:pilotName
+  });
+  const schedRef=push(ref(db,`airlines/${currentAirline}/schedules`));
+  await set(schedRef,{
+    routeId,fromIcao:r.fromIcao,toIcao:r.toIcao,fromIata:r.fromIata,toIata:r.toIata,
+    aircraftId,aircraftReg,pilotId,pilotName,
+    depTime,arrTime,days,
+    createdAt:Date.now()
+  });
+  notify('📅 Vol planifié !','success');
+  closeModal('scheduleModal');
+  loadRoutes();
+};
+
+// ─── SCHEDULE ─────────────────────────────────────────────────────────────────
+async function loadSchedule(){
+  if(!currentAirline){document.getElementById('scheduleTable').innerHTML='<div class="empty-state"><p>Rejoignez une compagnie</p></div>';return;}
+  const snap=await get(ref(db,`airlines/${currentAirline}/schedules`));
+  const el=document.getElementById('scheduleTable');
+  if(!snap.exists()){
+    el.innerHTML=`<div class="empty-state"><div class="icon">📅</div><p>Aucun vol planifié. Allez sur <strong>Routes</strong> → Assigner pour créer un planning.</p></div>
+    <div style="margin-top:16px;text-align:center"><button class="btn btn-primary" onclick="openRouteModal()">+ Créer une route d'abord</button></div>`;
+    return;
+  }
+  const scheds=Object.entries(snap.val()).map(([id,s])=>({id,...s}));
+  el.innerHTML=`<div style="margin-bottom:12px;text-align:right"><button class="btn btn-blue btn-sm" onclick="openAssignModal('')">+ Nouveau vol</button></div>
+  <table class="tbl"><thead><tr><th>Route</th><th>Avion</th><th>Pilote</th><th>Départ</th><th>Arrivée</th><th>Jours</th><th>Actions</th></tr></thead><tbody>
+    ${scheds.map(s=>`<tr>
+      <td style="color:var(--amber);font-family:var(--mono)">${s.fromIata||'?'} → ${s.toIata||'?'}</td>
+      <td>${s.aircraftReg||'—'}</td>
+      <td>${s.pilotName||'—'}</td>
+      <td class="mono" style="color:var(--blue2)">${s.depTime||'—'}</td>
+      <td class="mono" style="color:var(--blue2)">${s.arrTime||'—'}</td>
+      <td style="font-size:12px">${(s.days||[]).join(' ')}</td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteSchedule('${s.id}')">✕</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+window.deleteSchedule=async(id)=>{
+  await remove(ref(db,`airlines/${currentAirline}/schedules/${id}`));
+  notify('Vol supprimé','success');
+  loadSchedule();
+};
+
+// ─── PILOTS ───────────────────────────────────────────────────────────────────
+async function loadPilots(){
+  if(!currentAirline){document.getElementById('pilotsTable').innerHTML='<div class="empty-state"><p>Rejoignez une compagnie</p></div>';return;}
+  const pilotsSnap=await get(ref(db,`airlines/${currentAirline}/pilots`));
+  const el=document.getElementById('pilotsTable');
+  if(!pilotsSnap.exists()){el.innerHTML='<div class="empty-state"><div class="icon">👨‍✈️</div><p>Aucun pilote</p></div>';return;}
+  const uids=Object.keys(pilotsSnap.val());
+  const rows=await Promise.all(uids.map(async uid=>{
+    const ps=await get(ref(db,`pilots/${uid}`));
+    const p=ps.val()||{};
+    const rank=getRank(p.flightHours||0);
+    const isOwner=currentAirlineData?.ownerId===uid;
+    const salary=currentAirlineData?.pilotSalary||5000;
+    return `<tr>
+      <td>${p.name||uid}</td>
+      <td><span class="rank" style="background:${rank.color}20;border:1px solid ${rank.color}40;color:${rank.color}">${rank.icon} ${rank.name}</span></td>
+      <td class="mono">${(p.flightHours||0).toFixed(0)}h</td>
+      <td class="mono">${p.flightsCount||0}</td>
+      <td class="mono pos">${formatMoney(salary)}/mo</td>
+      <td><span class="badge ${isOwner?'badge-amber':'badge-blue'}">${isOwner?'PDG':'Pilote'}</span></td>
+      ${currentAirlineData?.ownerId===currentUser?.uid&&!isOwner?`<td><button class="btn btn-red btn-sm" onclick="firePilot('${uid}')">Renvoyer</button></td>`:'<td></td>'}
+    </tr>`;
+  }));
+  el.innerHTML=`<table class="tbl"><thead><tr><th>Nom</th><th>Grade</th><th>Heures</th><th>Vols</th><th>Salaire</th><th>Rôle</th><th>Action</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+
+window.firePilot=async(uid)=>{
+  await remove(ref(db,`airlines/${currentAirline}/pilots/${uid}`));
+  await update(ref(db,`pilots/${uid}`),{airlineId:null});
+  notify('Pilote renvoyé','success');
+  loadPilots();
+};
+
+// ─── MARKET ───────────────────────────────────────────────────────────────────
+window.switchMarketTab=(tab)=>{
+  document.querySelectorAll('.tabs .tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='aircraft'?0:1)));
+  document.getElementById('marketAircraft').style.display=tab==='aircraft'?'block':'none';
+  document.getElementById('marketUpgrades').style.display=tab==='upgrades'?'block':'none';
+};
+
+function loadMarket(){
+  const grid=document.getElementById('aircraftMarketGrid');
+  const categories=['regional','narrow','wide','vheavy'];
+  const catLabels={regional:'Régional',narrow:'Monocouloir',wide:'Long Courrier',vheavy:'Très Gros Porteur'};
+  let html='';
+  categories.forEach(cat=>{
+    const planes=AIRCRAFT_CATALOG.filter(a=>a.category===cat);
+    html+=`<div style="grid-column:1/-1;margin:8px 0 4px;font-family:var(--mono);font-size:12px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:6px">${catLabels[cat]}</div>`;
+    planes.forEach(ac=>{
+      html+=`
+      <div class="card" style="margin-bottom:0;cursor:pointer;transition:border .15s" onmouseover="this.style.borderColor='${ac.category==='vheavy'?'#ff4d4d':ac.category==='wide'?'#4da3ff':ac.category==='regional'?'#00e676':'#f5a623'}'" onmouseout="this.style.borderColor='var(--border)'" onclick="showAircraftDetail('${ac.id}')">
+        <div style="text-align:center;font-size:36px;margin-bottom:8px">${ac.emoji}</div>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--amber);text-align:center;margin-bottom:4px">${ac.variant}</div>
+        <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:12px">${ac.manufacturer}</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Sièges</span><span class="mono">${ac.seats}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Portée</span><span class="mono">${ac.range.toLocaleString()} km</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px"><span style="color:var(--text2)">Vitesse</span><span class="mono">${ac.cruiseSpeed} km/h</span></div>
+        <div style="text-align:center;font-family:var(--mono);font-size:16px;color:var(--green);margin-bottom:10px">${formatMoney(ac.price)}</div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:13px" onclick="event.stopPropagation();buyAircraft('${ac.id}')">Acheter</button>
+      </div>`;
+    });
+  });
+  grid.innerHTML=html;
+
+  // Upgrades
+  const uGrid=document.getElementById('upgradesGrid');
+  const upgrades=[
+    {id:'hangar','name':'Grand Hangar','desc':'Capacité de maintenance +50%','price':5000000,'icon':'🏭'},
+    {id:'simulator','name':'Simulateur de Vol','desc':'Formation pilotes accélérée','price':2000000,'icon':'🎮'},
+    {id:'crm','name':'Logiciel CRM','desc':'Satisfaction passagers +10%','price':1000000,'icon':'💻'},
+    {id:'lounge_corp','name':'Lounge Corporate','desc':'Revenus business class +15%','price':8000000,'icon':'🛋️'},
+    {id:'catering','name':'Service Traiteur Premium','desc':'Réputation +0.5 par mois','price':3000000,'icon':'🍽️'},
+    {id:'marketing','name':'Campagne Marketing','desc':'Nombre de vols/mois +20%','price':4000000,'icon':'📢'},
+  ];
+  uGrid.innerHTML=upgrades.map(u=>`
+    <div class="card" style="margin-bottom:0;text-align:center">
+      <div style="font-size:36px;margin-bottom:8px">${u.icon}</div>
+      <div style="font-weight:700;color:var(--amber);margin-bottom:4px">${u.name}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${u.desc}</div>
+      <div style="font-family:var(--mono);color:var(--green);margin-bottom:10px">${formatMoney(u.price)}</div>
+      <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="buyUpgrade('${u.id}','${u.name}',${u.price})">Acheter</button>
+    </div>`).join('');
+}
+
+window.showAircraftDetail=(id)=>{
+  const ac=AIRCRAFT_CATALOG.find(a=>a.id===id);
+  if(!ac)return;
+  document.getElementById('aircraftModalTitle').textContent=`${ac.emoji} ${ac.variant}`;
+  document.getElementById('aircraftModalContent').innerHTML=`
+    <div style="text-align:center;font-size:60px;margin-bottom:12px">${ac.emoji}</div>
+    <p style="color:var(--text2);text-align:center;margin-bottom:20px">${ac.description}</p>
+    <div class="grid2">
+      <div class="econ-item"><span class="econ-label">Fabricant</span><span class="econ-val">${ac.manufacturer}</span></div>
+      <div class="econ-item"><span class="econ-label">Catégorie</span><span class="econ-val">${ac.category}</span></div>
+      <div class="econ-item"><span class="econ-label">Sièges</span><span class="econ-val mono">${ac.seats}</span></div>
+      <div class="econ-item"><span class="econ-label">Portée max</span><span class="econ-val mono">${ac.range.toLocaleString()} km</span></div>
+      <div class="econ-item"><span class="econ-label">Vitesse croisière</span><span class="econ-val mono">${ac.cruiseSpeed} km/h</span></div>
+      <div class="econ-item"><span class="econ-label">Conso carburant</span><span class="econ-val mono">${ac.fuelBurn.toLocaleString()} kg/h</span></div>
+      <div class="econ-item"><span class="econ-label">Maintenance/mois</span><span class="econ-val mono neg">${formatMoney(Math.round(ac.price*0.015/12))}</span></div>
+      <div class="econ-item"><span class="econ-label">Prix d'achat</span><span class="econ-val mono pos">${formatMoney(ac.price)}</span></div>
+    </div>
+    <div style="margin-top:20px;text-align:center">
+      <button class="btn btn-primary" onclick="buyAircraft('${ac.id}');closeModal('aircraftModal')">✈ Acheter cet appareil</button>
+    </div>
+  `;
+  document.getElementById('aircraftModal').style.display='flex';
+};
+
+window.buyAircraft=async(id)=>{
+  if(!currentAirline){notify('Rejoignez une compagnie d\'abord','error');return;}
+  const ac=AIRCRAFT_CATALOG.find(a=>a.id===id);
+  if(!ac)return;
+  const balance=currentAirlineData?.balance||0;
+  if(balance<ac.price){notify(`Capital insuffisant. Besoin: ${formatMoney(ac.price)}. Disponible: ${formatMoney(balance)}`,'error');return;}
+  if(currentAirlineData?.ownerId!==currentUser?.uid){notify('Seul le PDG peut acheter des avions','error');return;}
+  // Generate registration
+  const iata=currentAirlineData?.iata||'XX';
+  const reg=`${iata}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+  const maintenance=Math.round(ac.price*0.015/12);
+  const fleetRef=push(ref(db,`airlines/${currentAirline}/fleet`));
+  await set(fleetRef,{
+    catalogId:ac.id,model:ac.variant,manufacturer:ac.manufacturer,
+    reg,seats:ac.seats,range:ac.range,
+    purchasedAt:Date.now(),maintenanceCost:maintenance,
+    assignedRoute:null,status:'available'
+  });
+  await update(ref(db,`airlines/${currentAirline}`),{balance:balance-ac.price});
+  currentAirlineData.balance=balance-ac.price;
+  document.getElementById('topWallet').textContent=formatMoney(currentAirlineData.balance);
+  notify(`✅ ${ac.variant} [${reg}] acheté pour ${formatMoney(ac.price)} !`,'success');
+};
+
+window.buyUpgrade=async(id,name,price)=>{
+  if(!currentAirline){notify('Rejoignez une compagnie d\'abord','error');return;}
+  const balance=currentAirlineData?.balance||0;
+  if(balance<price){notify('Capital insuffisant','error');return;}
+  if(currentAirlineData?.ownerId!==currentUser?.uid){notify('Seul le PDG peut acheter des améliorations','error');return;}
+  await update(ref(db,`airlines/${currentAirline}`),{
+    balance:balance-price,
+    [`upgrades/${id}`]:true
+  });
+  currentAirlineData.balance=balance-price;
+  notify(`✅ ${name} acheté !`,'success');
+};
+
+// ─── ECONOMY ──────────────────────────────────────────────────────────────────
+async function loadEconomy(){
+  if(!currentAirline){
+    document.getElementById('econBreakdown').innerHTML='<div class="empty-state"><p>Rejoignez une compagnie</p></div>';
+    loadPilotWallet();
+    return;
+  }
+  const monthly=await computeMonthlyRevenue();
+  const costs=await computeMonthlyCosts();
+  const profit=monthly-costs;
+  const fleetSnap=await get(ref(db,`airlines/${currentAirline}/fleet`));
+  let maintenance=0;
+  if(fleetSnap.exists()) Object.values(fleetSnap.val()).forEach(a=>maintenance+=(a.maintenanceCost||0));
+  const salary=(currentAirlineData?.pilotSalary||5000);
+  const pilotsSnap=await get(ref(db,`airlines/${currentAirline}/pilots`));
+  const pc=pilotsSnap.exists()?Object.keys(pilotsSnap.val()).length:0;
+  document.getElementById('econBreakdown').innerHTML=`
+    <div class="econ-item"><span class="econ-label">💚 Revenus vols</span><span class="econ-val pos">+${formatMoney(monthly)}</span></div>
+    <div class="econ-item"><span class="econ-label">🔧 Maintenance flotte</span><span class="econ-val neg">-${formatMoney(maintenance)}</span></div>
+    <div class="econ-item"><span class="econ-label">👨‍✈️ Salaires pilotes (${pc}×${formatMoney(salary)})</span><span class="econ-val neg">-${formatMoney(salary*pc)}</span></div>
+    <div style="border-top:2px solid var(--border);margin-top:12px;padding-top:12px">
+      <div class="econ-item"><span class="econ-label" style="font-weight:700">PROFIT NET</span><span class="econ-val ${profit>=0?'pos':'neg'}" style="font-size:18px;font-family:var(--mono)">${profit>=0?'+':''}${formatMoney(profit)}</span></div>
+      <div class="econ-item"><span class="econ-label">Capital total</span><span class="econ-val pos" style="font-size:16px">${formatMoney(currentAirlineData?.balance||0)}</span></div>
+    </div>
+  `;
+  loadPilotWallet();
+}
+
+function loadPilotWallet(){
+  const bal=currentUserData?.balance||0;
+  const salary=currentAirline?currentAirlineData?.pilotSalary||5000:0;
+  document.getElementById('pilotWallet').innerHTML=`
+    <div class="econ-item"><span class="econ-label">Solde personnel</span><span class="econ-val pos" style="font-size:20px;font-family:var(--mono)">${formatMoney(bal)}</span></div>
+    <div class="econ-item"><span class="econ-label">Salaire mensuel</span><span class="econ-val pos">+${formatMoney(salary)}/mois</span></div>
+    <div class="econ-item"><span class="econ-label">Total reçu</span><span class="econ-val pos">${formatMoney(currentUserData?.salaryTotal||0)}</span></div>
+    <div class="econ-item"><span class="econ-label">Total dépensé</span><span class="econ-val neg">${formatMoney(currentUserData?.spentTotal||0)}</span></div>
+    <p style="color:var(--text2);font-size:12px;margin-top:12px">💡 Utilisez votre argent personnel dans Mon Profil pour acheter des avantages.</p>
+  `;
+}
+
+// ─── ECONOMY TICK ─────────────────────────────────────────────────────────────
+async function doEconomyTick(){
+  if(!currentAirline) return;
+  const revenue=await computeMonthlyRevenue();
+  const costs=await computeMonthlyCosts();
+  // Tick = 1 minute = simulate 1 day = 1/30 of monthly profit
+  const dayProfit=(revenue-costs)/30;
+  const newBalance=(currentAirlineData?.balance||0)+dayProfit;
+  await update(ref(db,`airlines/${currentAirline}`),{balance:Math.max(0,newBalance)});
+  currentAirlineData.balance=Math.max(0,newBalance);
+  // Pay pilot salary daily portion
+  if(currentUserData?.airlineId===currentAirline){
+    const dailySalary=(currentAirlineData?.pilotSalary||5000)/30;
+    const newPilotBal=(currentUserData?.balance||0)+dailySalary;
+    const newSalaryTotal=(currentUserData?.salaryTotal||0)+dailySalary;
+    await update(ref(db,`pilots/${currentUser.uid}`),{balance:newPilotBal,salaryTotal:newSalaryTotal});
+    currentUserData.balance=newPilotBal;
+    currentUserData.salaryTotal=newSalaryTotal;
+    updateTopBar();
+  }
+}
+
+// ─── MAP ──────────────────────────────────────────────────────────────────────
+async function loadMap(){
+  if(!mapInstance){
+    const L=window.L;
+    mapInstance=L.map('mapContainer').setView([20,0],2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+      attribution:'&copy; OpenStreetMap &copy; CARTO',
+      subdomains:'abcd',maxZoom:19
+    }).addTo(mapInstance);
+  }
+  mapLayers.forEach(l=>l.remove());
+  mapLayers=[];
+  if(!currentAirline){
+    AIRPORTS.slice(0,15).forEach(ap=>{
+      const m=window.L.circleMarker([ap.lat,ap.lng],{radius:4,color:'#4da3ff',fillOpacity:0.7}).addTo(mapInstance);
+      m.bindPopup(`<b>${ap.iata}</b><br>${ap.name}`);
+      mapLayers.push(m);
+    });
+    return;
+  }
+  const routesSnap=await get(ref(db,`airlines/${currentAirline}/routes`));
+  const usedAirports=new Set();
+  if(routesSnap.exists()){
+    Object.values(routesSnap.val()).forEach(r=>{
+      const from=AIRPORTS.find(a=>a.icao===r.fromIcao);
+      const to=AIRPORTS.find(a=>a.icao===r.toIcao);
+      if(from&&to){
+        usedAirports.add(r.fromIcao);
+        usedAirports.add(r.toIcao);
+        const color=currentAirlineData?.color||'#1a7fff';
+        const line=window.L.polyline([[from.lat,from.lng],[to.lat,to.lng]],{color,weight:2,opacity:0.7,dashArray:'6,4'}).addTo(mapInstance);
+        line.bindPopup(`${r.fromIata} ↔ ${r.toIata}<br>${r.distance} km<br>Rev: ${formatMoney(r.revenuePerFlight)}/vol`);
+        mapLayers.push(line);
+      }
+    });
+  }
+  AIRPORTS.forEach(ap=>{
+    const isHub=ap.icao===currentAirlineData?.hubIcao;
+    const isUsed=usedAirports.has(ap.icao);
+    if(!isHub&&!isUsed) return;
+    const color=isHub?'#f5a623':currentAirlineData?.color||'#1a7fff';
+    const r=isHub?8:5;
+    const m=window.L.circleMarker([ap.lat,ap.lng],{radius:r,color,fillColor:color,fillOpacity:0.8,weight:2}).addTo(mapInstance);
+    m.bindPopup(`<b>${ap.iata}</b> ${isHub?'⭐ HUB':''}<br>${ap.name}<br>${ap.city}, ${ap.country}`);
+    mapLayers.push(m);
+  });
+  setTimeout(()=>mapInstance.invalidateSize(),100);
+}
+
+// ─── ALL AIRLINES ──────────────────────────────────────────────────────────────
+async function loadAllAirlines(){
+  const snap=await get(ref(db,'airlines'));
+  const el=document.getElementById('allAirlinesGrid');
+  if(!snap.exists()){el.innerHTML='<div class="empty-state"><div class="icon">🌐</div><p>Aucune compagnie encore</p></div>';return;}
+  const airlines=Object.entries(snap.val()).map(([id,a])=>({id,...a}));
+  airlines.sort((a,b)=>(b.balance||0)-(a.balance||0));
+  el.innerHTML=airlines.map((a,i)=>`
+    <div style="display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--mono);color:var(--amber);width:24px">${i+1}</div>
+      <div style="width:48px;height:48px;border-radius:50%;background:${(a.color||'#1a7fff')}25;border:2px solid ${a.color||'#1a7fff'};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:${a.color||'#1a7fff'};font-family:var(--mono)">${a.iata?.charAt(0)||'?'}</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700;color:var(--text)">${a.name} <span style="color:var(--blue2);font-family:var(--mono);font-size:12px">${a.iata}</span></div>
+        <div style="font-size:12px;color:var(--text2)">${a.country} • ${a.slogan||''} • Hub: ${AIRPORTS.find(ap=>ap.icao===a.hubIcao)?.iata||a.hubIcao||'?'}</div>
+        <div style="margin-top:4px;display:flex;gap:6px">
+          <span class="badge badge-blue">${Object.keys(a.fleet||{}).length} avions</span>
+          <span class="badge badge-amber">${Object.keys(a.routes||{}).length} routes</span>
+          <span class="badge badge-green">${formatMoney(a.balance||0)}</span>
+        </div>
+      </div>
+      ${a.ownerId!==currentUser?.uid&&!currentAirline?`<button class="btn btn-ghost btn-sm" onclick="joinAirline('${a.id}')">Rejoindre</button>`:''}
+    </div>`).join('');
+}
+
+// ─── PROFILE ──────────────────────────────────────────────────────────────────
+function loadProfile(){
+  const p=currentUserData;
+  const rank=getRank(p?.flightHours||0);
+  document.getElementById('profileName').textContent=p?.name||'—';
+  document.getElementById('profileRank').innerHTML=`${rank.icon} ${rank.name}`;
+  document.getElementById('profileRank').style.color=rank.color;
+  document.getElementById('profileAirline').textContent=currentAirlineData?.name||'Indépendant';
+  document.getElementById('profileBalance').textContent=formatMoney(p?.balance||0);
+  document.getElementById('statHours').textContent=(p?.flightHours||0).toFixed(0)+'h';
+  document.getElementById('statFlights').textContent=p?.flightsCount||0;
+  document.getElementById('statRoutesFlown').textContent=p?.routesFlown||0;
+  document.getElementById('statSalaryTotal').textContent=formatMoney(p?.salaryTotal||0);
+  document.getElementById('statSpent').textContent=formatMoney(p?.spentTotal||0);
+}
+
+window.buyPilotItem=async(id,name,price)=>{
+  const p=parseInt(price);
+  const bal=currentUserData?.balance||0;
+  if(bal<p){notify('Fonds insuffisants','error');return;}
+  const newBal=bal-p;
+  const newSpent=(currentUserData?.spentTotal||0)+p;
+  await update(ref(db,`pilots/${currentUser.uid}`),{
+    balance:newBal,spentTotal:newSpent,
+    [`purchases/${id}`]:true
+  });
+  currentUserData.balance=newBal;
+  currentUserData.spentTotal=newSpent;
+  updateTopBar();
+  notify(`✅ ${name} acheté !`,'success');
+  loadProfile();
+};
+
+// ─── MODAL UTILS ─────────────────────────────────────────────────────────────
+window.closeModal=(id)=>document.getElementById(id).style.display='none';
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('modal-overlay')) e.target.style.display='none';
+});
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+</body>
+</html>
