@@ -1089,8 +1089,8 @@ async function loadRoutes(){
       return `<tr>
         <td><strong style="color:var(--amber)">${r.fromIata||'?'} ↔ ${r.toIata||'?'}</strong><br><span style="color:var(--text2);font-size:11px">${from?.name||'?'} — ${to?.name||'?'}</span></td>
         <td class="mono">${(r.distance||0).toLocaleString()} km</td>
-        <td>${r.assignedAircraftReg||<span style="color:var(--text2)">Non assigné</span>}</td>
-        <td>${r.assignedPilotName||'<span style="color:var(--text2)">Non assigné</span>'}</td>
+        <td>${r.assignedAircraftReg||'—'}</td>
+        <td>${r.assignedPilotName||'—'}</td>
         <td class="mono pos">+${formatMoney(r.revenuePerFlight||0)}</td>
         <td class="mono">${r.flightsPerMonth||10}</td>
         <td class="mono ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${formatMoney(profit)}</td>
