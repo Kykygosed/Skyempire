@@ -1367,7 +1367,9 @@ window.buyAircraft=async(id)=>{
   if(currentAirlineData?.ownerId!==currentUser?.uid){notify('Seul le PDG peut acheter des avions','error');return;}
   // Generate registration
   const iata=currentAirlineData?.iata||'XX';
-  const reg=`${iata}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+  const letters='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const rndLetters=Array.from({length:4},()=>letters[Math.floor(Math.random()*letters.length)]).join('');
+  const reg=`${iata.charAt(0)}-${rndLetters}`;
   const maintenance=Math.round(ac.price*0.015/12);
   const fleetRef=push(ref(db,`airlines/${currentAirline}/fleet`));
   await set(fleetRef,{
